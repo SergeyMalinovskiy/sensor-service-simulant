@@ -1,16 +1,27 @@
-# This is a sample Python script.
+import time
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+from sensor_simulant import sensor, mqtt_publisher
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    publisher = mqtt_publisher.MqttSensorPublisher('localhost', 1883)
+
+    try:
+        publisher.loop_start()
+
+        while True:
+            publisher.subscribe(1)
+            publisher.publish(1, "1234")
+
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("Exiting...")
+    finally:
+        publisher.stop()
+
+    # sensor = sensor.Sensor(publisher, 1)
+    #
+    # sensor.
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
