@@ -1,10 +1,12 @@
+import json
 import time
 
-from sensor_simulant.interface import SensorPublisher
 from paho.mqtt import client as mqtt_client
 
+from sensor_simulant.interface import Publisher
 
-class MqttSensorPublisher(SensorPublisher):
+
+class MqttPublisher(Publisher):
     def __init__(self, host, port):
         self.host = host
         self.port = port
@@ -12,8 +14,12 @@ class MqttSensorPublisher(SensorPublisher):
         self.client = self._configure_client()
 
 
-    def publish(self, sensor_id, data):
-        self.client.publish(f"test/sensors/{sensor_id}", data)
+    def publish(self, channel: str, data: object) -> int:
+        str_data = json.dumps(data.__dict__, indent=4, sort_keys=True, default=str)
+
+        self.client.publish(channel, str_data)
+
+        return 1
 
 
     def subscribe(self, sensor_id):
@@ -49,6 +55,7 @@ class MqttSensorPublisher(SensorPublisher):
     def _on_connect(client: mqtt_client.Client, userdata, flags, rc = None):
         print(f"Connected with result code {str(rc)}\n\n")
         client.publish('test', "Hello from Sensor Simulant!")
+
 
     @staticmethod
     def _on_disconnect(client: mqtt_client.Client, data, error):

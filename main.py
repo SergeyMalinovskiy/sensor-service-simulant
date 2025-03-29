@@ -1,18 +1,26 @@
 import time
+from datetime import datetime
 
-from sensor_simulant import sensor, mqtt_publisher
-
+from libs.contract.python.data import SendData
+from sensor_simulant import mqtt_publisher
+from sensor_simulant.sensor import Sensor
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    publisher = mqtt_publisher.MqttSensorPublisher('localhost', 1883)
+    publisher = mqtt_publisher.MqttPublisher('localhost', 1883)
 
+    sensor = Sensor(1, publisher)
     try:
         publisher.loop_start()
 
         while True:
-            publisher.subscribe(1)
-            publisher.publish(1, "1234")
+            data = SendData(
+                value="1234",
+                datetime=datetime.now(),
+                comment="test data",
+            )
+
+            sensor.send_data(data)
 
             time.sleep(1)
     except KeyboardInterrupt:

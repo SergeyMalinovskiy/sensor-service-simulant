@@ -1,6 +1,6 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod, ABC
 
-class SensorPublisher(ABC):
+class Publisher(ABC):
     @abstractmethod
-    def publish(self, sensor_id, data):
+    def publish(self, channel: str, data: object) -> int:
         pass
