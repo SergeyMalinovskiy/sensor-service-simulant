@@ -1,35 +1,76 @@
-import time
-from datetime import datetime
+import asyncio
+import random
 
-from libs.contract.python.data import SendData
+from typing import Coroutine
+
 from sensor_simulant import mqtt_publisher
-from sensor_simulant.sensor import Sensor
+from sensor_simulant.data_emitter import DataEmitter
+from sensor_simulant.sensors.environment import MeasureEnvironment
+from sensor_simulant.sensors.interface import FeelingEnvironment
+from sensor_simulant.sensors.sensor import Sensor
+from sensor_simulant.sensors.temp_sensor import TempCelsiusSensor
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
+_sensors: frozenset[Sensor] = frozenset([])
+_measurement_environment: MeasureEnvironment = MeasureEnvironment()
+
+async def main():
+    global _sensors
+
     publisher = mqtt_publisher.MqttPublisher('localhost', 1883)
+    emitter = DataEmitter(
+        publisher
+    )
 
-    sensor = Sensor(1, publisher)
+    _sensors = frozenset([
+        TempCelsiusSensor(1, emitter, 2),
+        TempCelsiusSensor(2, emitter, 5),
+    ])
+
+    for sensor in _sensors:
+        if isinstance(sensor, FeelingEnvironment):
+            sensor.immerse_to_environment(_measurement_environment)
+
+    await run_tasks()
+
+
+async def send_data_task(sensor: Sensor):
+    print("Sensor {}: start sending data with interval {} seconds".format(sensor.get_id(), sensor.get_interval()))
+
+    while True:
+        # delay = sensor.get_interval()
+        sensor.send()
+        #
+        print("Sensor {}: sending data - {}".format(sensor.get_id(), sensor.get_current_value()))
+        await asyncio.sleep(sensor.get_interval())
+
+
+async def change_environment_task(environment: MeasureEnvironment):
+    while True:
+        print("Environment changed")
+
+        environment.set_param('temperature', random.randint(16111, 18999) / 1000)
+
+        print("Environment: {}".format(environment.get_data()))
+        await asyncio.sleep(10)
+
+
+async def prepare_task(coro: Coroutine):
+    task = asyncio.create_task(coro)
+
+    await task
+
+
+async def run_tasks():
+    tasks = [
+        *[prepare_task(send_data_task(sensor)) for sensor in _sensors],
+        prepare_task(change_environment_task(_measurement_environment)),
+    ]
+
+    await asyncio.gather(*tasks)
+
+
+if __name__ == '__main__':
     try:
-        publisher.loop_start()
-
-        while True:
-            data = SendData(
-                value="1234",
-                datetime=datetime.now(),
-                comment="test data",
-            )
-
-            sensor.send_data(data)
-
-            time.sleep(1)
+        asyncio.run(main())
     except KeyboardInterrupt:
-        print("Exiting...")
-    finally:
-        publisher.stop()
-
-    # sensor = sensor.Sensor(publisher, 1)
-    #
-    # sensor.
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+        exit(0)
