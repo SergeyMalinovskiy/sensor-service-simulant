@@ -8,7 +8,7 @@ from sensor_simulant.data_emitter import DataEmitter
 from sensor_simulant.sensors.environment import MeasureEnvironment
 from sensor_simulant.sensors.interface import FeelingEnvironment
 from sensor_simulant.sensors.sensor import Sensor
-from sensor_simulant.sensors.temp_sensor import TempCelsiusSensor
+from sensor_simulant.sensors.implementations.temp_sensor import TempCelsiusSensor
 
 _sensors: frozenset[Sensor] = frozenset([])
 _measurement_environment: MeasureEnvironment = MeasureEnvironment()
