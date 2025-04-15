@@ -1,9 +1,13 @@
 import asyncio
+import os
 import random
+import requests
 
 from typing import Coroutine
 
 from sensor_simulant import mqtt_publisher
+from sensor_simulant.config.app_config import AppConfig
+
 from sensor_simulant.data_emitter import DataEmitter
 from sensor_simulant.sensors.environment import MeasureEnvironment
 from sensor_simulant.sensors.interface import FeelingEnvironment
@@ -13,10 +17,18 @@ from sensor_simulant.sensors.implementations.temp_sensor import TempCelsiusSenso
 _sensors: frozenset[Sensor] = frozenset([])
 _measurement_environment: MeasureEnvironment = MeasureEnvironment()
 
+def init_config() -> AppConfig:
+    config = AppConfig()
+
+    return config
+
+
 async def main():
     global _sensors
 
-    publisher = mqtt_publisher.MqttPublisher('localhost', 1883)
+    config = init_config()
+
+    publisher = mqtt_publisher.MqttPublisher(config)
     emitter = DataEmitter(
         publisher
     )

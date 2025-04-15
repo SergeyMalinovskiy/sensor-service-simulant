@@ -3,13 +3,14 @@ import time
 
 from paho.mqtt import client as mqtt_client
 
+from sensor_simulant.config.app_config import AppConfig
 from sensor_simulant.interface import Publisher
 
 
 class MqttPublisher(Publisher):
-    def __init__(self, host, port):
-        self.host = host
-        self.port = port
+    def __init__(self, config: AppConfig):
+        self._host = config.get_mqtt_host()
+        self._port = config.get_mqtt_port()
 
         self.client = self._configure_client()
 
@@ -36,7 +37,7 @@ class MqttPublisher(Publisher):
 
         client.on_connect = self._on_connect
         client.on_disconnect = self._on_disconnect
-        client.connect(self.host, self.port, 60)
+        client.connect(self._host, self._port, 60)
         time.sleep(2)
 
 
